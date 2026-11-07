@@ -1,0 +1,54 @@
+
+name: fastapi_mysql_project
+
+services:
+  app:
+    build:
+      context: .
+      network: host
+    image: fastapi_mysql_app:local
+    container_name: fastapi_mysql_app
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      SESSION_SECRET_KEY: ${SESSION_SECRET_KEY:?SESSION_SECRET_KEY is required}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: docker.arvancloud.ir/mysql:8.0
+    container_name: fastapi_mysql_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
+      MYSQL_DATABASE: fastapi_db
+      MYSQL_USER: fastapi_user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: fastapi_mysql_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 0
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

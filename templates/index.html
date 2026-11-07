@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>مدیریت کاربران</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <form action="/logout" method="post" class="logout-form">
+        <input
+            type="hidden"
+            name="csrf_token"
+            value="{{ csrf_token }}"
+        >
+
+        <button type="submit" class="btn-logout">
+            خروج از حساب
+        </button>
+    </form>
+
+    <main class="container">
+
+        <!-- سربرگ صفحه -->
+        <header class="page-header">
+
+            <div class="header-content">
+                <span class="header-label">پنل مدیریت</span>
+
+                <h1>مدیریت کاربران</h1>
+
+                <p class="header-description">
+                    مدیریت، جست‌وجو و ویرایش اطلاعات کاربران
+                </p>
+            </div>
+
+            <a href="/add" class="btn-add">
+                <span class="plus-icon" aria-hidden="true">+</span>
+                <span>افزودن کاربر جدید</span>
+            </a>
+
+        </header>
+
+        <!-- پنل اصلی -->
+        <section class="panel">
+
+            <!-- پیام‌های سیستم -->
+            {% if notification %}
+            <div
+                class="notification notification-{{ notification.type }}"
+                role="status"
+                aria-live="polite"
+            >
+                {{ notification.text }}
+            </div>
+            {% endif %}
+
+            <!-- عنوان فهرست -->
+            <div class="section-heading">
+                <div>
+                    <h2>فهرست کاربران</h2>
+                    <p>برای یافتن کاربر، یکی از فیلدهای زیر را پر کنید.</p>
+                </div>
+            </div>
+
+            <!-- فرم جست‌وجو -->
+            <form action="/" method="get" class="student-form search-form">
+
+                <div class="form-group">
+                    <label for="search_name">نام و نام خانوادگی</label>
+
+                    <input
+                        type="text"
+                        id="search_name"
+                        name="name"
+                        placeholder="مثلاً علی رضایی"
+                        value="{{ search_name }}"
+                        autocomplete="name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="search_phone">شماره موبایل</label>
+
+                    <input
+                        type="tel"
+                        id="search_phone"
+                        name="phone"
+                        dir="ltr"
+                        placeholder="09123456789"
+                        value="{{ search_phone }}"
+                        autocomplete="tel"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="search_email">ایمیل</label>
+
+                    <input
+                        type="text"
+                        id="search_email"
+                        name="email"
+                        dir="ltr"
+                        placeholder="example@email.com"
+                        value="{{ search_email }}"
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-actions full-width">
+
+                    <button type="submit" class="create-button">
+                        <span aria-hidden="true">⌕</span>
+                        جست‌وجوی کاربران
+                    </button>
+
+                    <a href="/" class="show-all-button">
+                        <span aria-hidden="true">↻</span>
+                        نمایش همه کاربران
+                    </a>
+
+                </div>
+
+            </form>
+
+            <!-- جدول کاربران -->
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>ID MySql</th>
+                            <th>نام و نام خانوادگی</th>
+                            <th>سن</th>
+                            <th>تاریخ تولد</th>
+                            <th>نام پدر</th>
+                            <th>محل تولد</th>
+                            <th>شماره تلفن</th>
+                            <th>ایمیل</th>
+                            <th>آدرس</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for student in students %}
+                        <tr>
+
+                            <td class="student-id" dir="ltr">
+                                {{ student._id }}
+                            </td>
+
+                            <td class="student-name">
+                                {{ student.name }}
+                            </td>
+
+                            <td>
+                                {{ student.age }}
+                            </td>
+
+                            <td>
+                                {{ student.get('birth_date', '-') }}
+                            </td>
+
+                            <td>
+                                {{ student.get('father_name', '-') }}
+                            </td>
+
+                            <td>
+                                {{ student.get('birth_place', '-') }}
+                            </td>
+
+                            <td class="ltr-cell" dir="ltr">
+                                {{ student.get('phone', '-') }}
+                            </td>
+
+                            <td class="ltr-cell" dir="ltr">
+                                {{ student.get('email', '-') }}
+                            </td>
+
+                            <td class="address">
+                                {{ student.get('address') or '-' }}
+                            </td>
+
+                            <td>
+                                <div class="actions">
+
+                                    <a
+                                        href="/add/{{ student._id }}"
+                                        class="button edit-button"
+                                    >
+                                        ویرایش
+                                    </a>
+
+                                    <form
+                                        action="/students/{{ student._id }}/delete"
+                                        method="post"
+                                        onsubmit="return confirm('آیا از حذف این کاربر مطمئن هستید؟');"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="csrf_token"
+                                            value="{{ csrf_token }}"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="delete-button"
+                                        >
+                                            حذف
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+                        <tr>
+                            <td colspan="10" class="empty-message">
+
+                                {% if search_performed %}
+                                    <span class="empty-icon" aria-hidden="true">⌕</span>
+
+                                    <strong>کاربری پیدا نشد</strong>
+
+                                    <p>
+                                        عبارت جست‌وجو را بررسی کنید یا همه کاربران را نمایش دهید.
+                                    </p>
+                                {% else %}
+                                    <span class="empty-icon" aria-hidden="true">♙</span>
+
+                                    <strong>هنوز کاربری ثبت نشده است</strong>
+
+                                    <p>
+                                        برای شروع، کاربر جدیدی به فهرست اضافه کنید.
+                                    </p>
+                                {% endif %}
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <!-- پابرگ صفحه -->
+        <footer class="page-footer">
+            سامانه مدیریت کاربران
+        </footer>
+
+    </main>
+
+    <script>
+        // حذف خودکار پیام‌های سیستم پس از 4 ثانیه
+        document.querySelectorAll(".notification").forEach(function (message) {
+            setTimeout(function () {
+                message.remove();
+            }, 4000);
+        });
+    </script>
+
+</body>
+
+</html>
